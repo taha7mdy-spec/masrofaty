@@ -84,7 +84,8 @@ nav button.on svg{background:rgba(18,184,134,.18);width:64px;height:34px;padding
 </div>
 
 <div id="p1" class="pg">
-  <div class="card"><b>حسب التصنيف</b><div id="cats" style="margin-top:10px"></div></div>
+  <div class="card"><div class="row sp"><b>حسب التصنيف</b><button class="chip" onclick="openS('ct')">تعديل الأسماء</button></div><div id="cats" style="margin-top:10px"></div></div>
+  <div class="card" id="cardsC" style="display:none"><b>حسب الكارت أو الحساب</b><div id="cards" style="margin-top:10px"></div></div>
   <div class="card"><b>كل معاملات الشهر</b><div id="list" style="margin-top:6px"></div></div>
 </div>
 
@@ -116,6 +117,7 @@ nav button.on svg{background:rgba(18,184,134,.18);width:64px;height:34px;padding
 <div class="sheet" id="su"><h3>اشتراك أو فاتورة شهرية</h3>
   <input class="in" id="sn" placeholder="الاسم (مثلًا Netflix)"><input class="in" id="sa2" type="number" inputmode="decimal" placeholder="المبلغ الشهري">
   <button class="btn" onclick="addSub()">إضافة</button></div>
+<div class="sheet" id="ct"><h3>أسماء التصنيفات</h3><div id="ctl"></div><div class="row"><input class="in" id="nc" placeholder="تصنيف جديد" style="margin:0"><button class="btn" style="width:auto;margin:0;padding:13px 18px" onclick="addCat()">إضافة</button></div></div>
 <div class="sheet" id="sy"><h3>المزامنة والنسخ الاحتياطي</h3>
   <input class="in" id="cid" placeholder="Client ID" dir="ltr">
   <button class="btn s" onclick="saveCid()">حفظ الـ Client ID</button>
@@ -129,7 +131,7 @@ nav button.on svg{background:rgba(18,184,134,.18);width:64px;height:34px;padding
 <script>
 var IC={plus:"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z",grid:"M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z",pie:"M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z",cal:"M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z",eye:"M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z",spark:"M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z",cloud:"M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"};
 var CATS=["أكل","مواصلات","فواتير","تسوق","صحة","ترفيه","تحويلات","أخرى"];
-var KW={"أكل":/مطعم|كافيه|cafe|coffee|food|talabat|طلبات|elmenus|carrefour|كارفور|سوبر|market|بقالة|mcdonald|kfc/i,"مواصلات":/uber|careem|كريم|اوبر|بنزين|petrol|وقود|مترو|indrive/i,"فواتير":/فاتورة|bill|fawry|فوري|vodafone|orange|etisalat|فودافون|اتصالات|كهرباء|غاز|مياه|انترنت/i,"تسوق":/amazon|noon|jumia|mall|مول|متجر|store|shop/i,"صحة":/صيدلية|pharmacy|مستشفى|clinic|عيادة|دكتور|وصفة/i,"ترفيه":/netflix|spotify|cinema|سينما|youtube|shahid|game/i,"تحويلات":/تحويل|transfer|instapay|انستاباي/i};
+var KW={"أكل":/مطعم|كافيه|cafe|coffee|food|talabat|طلبات|elmenus|carrefour|كارفور|سوبر|market|بقالة|mcdonald|kfc/i,"مواصلات":/uber|careem|كريم|اوبر|بنزين|petrol|وقود|مترو|indrive/i,"فواتير":/فاتورة|bill|fawry|فوري|vodafone|orange|etisalat|فودافون|اتصالات|كهرباء|غاز|مياه|انترنت/i,"تسوق":/amazon|noon|jumia|mall|مول|متجر|store|shop|souq|gomla|سوق|جملة/i,"صحة":/صيدلية|pharmacy|مستشفى|clinic|عيادة|دكتور|وصفة/i,"ترفيه":/netflix|spotify|cinema|سينما|youtube|shahid|game/i,"تحويلات":/تحويل|transfer|instapay|انستاباي/i};
 var S={tx:[],subs:[],del:[],bud:0,bts:0},cur=new Date();cur.setDate(1);
 var CID="",tok=null,tokExp=0,tc=null,timer=null;
 try{var r=localStorage.getItem("masrofaty");if(r)S=Object.assign(S,JSON.parse(r));CID=localStorage.getItem("mcid")||""}catch(e){}
@@ -147,32 +149,45 @@ function save(){try{localStorage.setItem("masrofaty",JSON.stringify(S))}catch(e)
   if(tok&&Date.now()<tokExp){clearTimeout(timer);timer=setTimeout(function(){sync(false)},1500)}}
 function mv(k){cur.setMonth(cur.getMonth()+k);render()}
 function setBud(){S.bud=parseFloat($("bud").value)||0;S.bts=Date.now();save();closeS();render()}
-function guess(s){for(var k in KW)if(KW[k].test(s))return k;return "أخرى"}
+function CL(){return S.cats&&S.cats.length?S.cats:CATS}
+function OT(){return (S.al&&S.al["أخرى"])||"أخرى"}
+function guess(s){var a=S.al||{};for(var k in KW)if(KW[k].test(s))return a[k]||k;return OT()}
+function fillCats(){$("c").innerHTML=CL().map(function(c){return "<option>"+esc(c)+"</option>"}).join("");$("ctl").innerHTML=CL().map(function(c,i){return '<input class="in" value="'+esc(c)+'" onchange="renameCat('+i+',this.value)">'}).join("")}
+function renameCat(i,v){v=v.trim();var L=CL().slice(),o=L[i];if(!v||v===o){fillCats();return}
+  L[i]=v;S.cats=L.filter(function(c,j){return L.indexOf(c)===j});S.cts=Date.now();S.al=S.al||{};
+  Object.keys(KW).concat("أخرى").forEach(function(k){if((S.al[k]||k)===o)S.al[k]=v});
+  S.tx.forEach(function(t){if(t.cat===o){t.cat=v;t.u=Date.now()}});save();fillCats();render()}
+function addCat(){var v=$("nc").value.trim();if(!v||CL().indexOf(v)>-1)return;S.cats=CL().concat(v);S.cts=Date.now();$("nc").value="";save();fillCats()}
 function add(o){o.u=Date.now();S.tx.unshift(o);save();render()}
 function addManual(){var a=parseFloat($("a").value);if(!a)return;var n=$("n").value.trim();add({id:Date.now(),amt:a,type:$("t").value,note:n||$("c").value,cat:$("c").value,d:Date.now()});$("a").value="";$("n").value="";closeS()}
 function addSub(){var a=parseFloat($("sa2").value),n=$("sn").value.trim();if(!a||!n)return;S.subs.push({id:Date.now(),name:n,amt:a,u:Date.now()});$("sa2").value="";$("sn").value="";save();closeS();render()}
 function parseText(t){
-  var x=t.match(/(?:EGP|LE|L\.E|جنيه|ج\.م|مبلغ|بمبلغ)\s*:?\s*([\d,]+(?:\.\d+)?)/i)||t.match(/([\d,]+(?:\.\d+)?)\s*(?:EGP|LE|جنيه|ج\.م)/i);
+  var t2=t.replace(/(?:الرصيد|الحد\s+المتاح|available\s+(?:balance|limit)|card\s+available|avail\.?\s*bal)[\s\S]*$/i,""),x=t2.match(/(?:EGP|LE|L\.E|جنيه|ج\.?م|مبلغ|بمبلغ)\s*:?\s*([\d,]+(?:\.\d+)?)/i)||t2.match(/([\d,]+(?:\.\d+)?)\s*(?:EGP|LE|جنيه|ج\.?م)/i);
   if(!x)return "ما قدرتش ألاقي مبلغ في الرسالة. جرّب الإضافة اليدوية.";
   var amt=parseFloat(x[1].replace(/,/g,""));
   var inc=/إيداع|ايداع|استلام|وارد|credited|received|deposit|salary|راتب|refund|استرداد/i.test(t);
-  var mm=t.match(/(?:^|\s)(?:at|لدى|عند)\s+(.+?)(?=\s+(?:on|في|بتاريخ)\s+\d|[.,،\n]|$)/i);
-  var note=mm?mm[1].trim().slice(0,40):t.replace(/\s+/g," ").slice(0,30);
-  var dt=Date.now(),dm=t.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(?:at\s+|في\s+)?(\d{1,2}):(\d{2}))?/);
+  var mm=t.match(/(?:(?:^|\s)at|لدى|عند)\s+(.+?)(?=\s+(?:on|في|بتاريخ|يوم)\s+\d|[.,،\n]|$)/i);
+  var dl=t.match(/إيداع.*?\sفي\s+(.+?)\s+في\s+(?:بطاقتك|حسابك)/);
+  var note=mm?mm[1].trim().slice(0,40):(/إيداع|ايداع|deposit/i.test(t)?"إيداع"+(dl?" – "+dl[1].trim().slice(0,30):""):/تحويل\s*لحظي|instapay|انستاباي/i.test(t)?"تحويل لحظي":/تحويل|transfer/i.test(t)?"تحويل":/سحب|atm|withdraw/i.test(t)?"سحب نقدي":t.replace(/\s+/g," ").slice(0,30));
+  var dt=Date.now(),dm=t.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})(?:\s+(?:at\s+|في\s+)?(\d{1,2}):(\d{2}))?/);
   if(dm&&+dm[2]<=12){var yy=+dm[3];if(yy<100)yy+=2000;var z=new Date(yy,+dm[2]-1,+dm[1],+(dm[4]||12),+(dm[5]||0));if(!isNaN(z))dt=z.getTime()}
-  add({id:Date.now(),amt:amt,type:inc?"i":"e",note:note,cat:inc?"أخرى":guess(mm?note:t),d:dt});
-  return "تمت إضافة "+fmt(amt)+(inc?" كدخل":" كمصروف");
+  var cm=t.match(/(?:ending(?:\s+with)?|ends?\s+(?:in|with)|تنتهي\s+بـ?|المنتهي[ةه]?\s+بـ?|بطاقة\s+رقم|card\s*(?:no\.?|number)?|[x*•]{2,})\s*:?\s*[x*•]*\s*#?\s*(\d{4})\b/i);
+  add({id:Date.now(),amt:amt,type:inc?"i":"e",note:note,cat:inc?OT():guess(mm?note:t),card:cm?cm[1]:"",d:dt});
+  var dd=new Date(dt),other=key(dd)!==key(cur);
+  if(other){cur=new Date(dd.getFullYear(),dd.getMonth(),1);render()}
+  go(0);
+  return "تمت إضافة "+fmt(amt)+(inc?" كدخل":" كمصروف")+(cm?(/حساب|account/i.test(t)?" · حساب ":" · كارت ")+cm[1]:"")+(other?" بتاريخ "+dd.toLocaleDateString("ar-EG-u-nu-latn",{day:"numeric",month:"long"}):"");
 }
 function doSms(){var m=parseText($("sms").value);$("sms").value="";closeS();toast(m)}
 function rm(id){S.tx=S.tx.filter(function(t){return t.id!==id});S.subs=S.subs.filter(function(t){return t.id!==id});S.del.push(id);save();render()}
 function recat(id,c){S.tx.forEach(function(t){if(t.id===id){t.cat=c;t.u=Date.now()}});save();render()}
 function row(t,full){
-  var inc=t.type==="i",o=CATS.map(function(c){return '<option'+(c===t.cat?' selected':'')+'>'+c+'</option>'}).join("");
-  return '<div class="tx"><div class="row sp"><span>'+esc(t.note)+'</span><b class="amt" style="color:'+(inc?'var(--ac)':'inherit')+'">'+(inc?"+":"−")+fmt(t.amt)+'</b></div><div class="row sp mut" style="margin-top:6px">'+(full?'<select class="chip" onchange="recat('+t.id+',this.value)">'+o+'</select>':'<span>'+esc(t.cat)+'</span>')+'<span>'+new Date(t.d).toLocaleDateString("ar-EG-u-nu-latn")+'</span>'+(full?'<button style="color:var(--red)" onclick="rm('+t.id+')">حذف</button>':'')+'</div></div>'}
+  var inc=t.type==="i",o=CL().map(function(c){return '<option'+(c===t.cat?' selected':'')+'>'+c+'</option>'}).join("");
+  return '<div class="tx"><div class="row sp"><span>'+esc(t.note)+'</span><b class="amt" style="color:'+(inc?'var(--ac)':'inherit')+'">'+(inc?"+":"−")+fmt(t.amt)+'</b></div><div class="row sp mut" style="margin-top:6px">'+(full?'<select class="chip" onchange="recat('+t.id+',this.value)">'+o+'</select>':'<span>'+esc(t.cat)+(t.card?" · ••"+esc(t.card):"")+'</span>')+'<span>'+new Date(t.d).toLocaleDateString("ar-EG-u-nu-latn")+(full&&t.card?" · ••"+esc(t.card):"")+'</span>'+(full?'<button style="color:var(--red)" onclick="rm('+t.id+')">حذف</button>':'')+'</div></div>'}
 function render(){
   var m=cur.toLocaleDateString("ar-EG-u-nu-latn",{month:"long",year:"numeric"});$("mon").textContent=m;$("mon2").textContent=m;
-  var k=key(cur),L=S.tx.filter(function(t){return key(new Date(t.d))===k}).sort(function(a,c){return c.d-a.d}),e=0,i=0,bc={};
-  L.forEach(function(t){if(t.type==="e"){e+=t.amt;bc[t.cat]=(bc[t.cat]||0)+t.amt}else i+=t.amt});
+  var k=key(cur),L=S.tx.filter(function(t){return key(new Date(t.d))===k}).sort(function(a,c){return c.d-a.d}),e=0,i=0,bc={},cc={};
+  L.forEach(function(t){if(t.type==="e"){e+=t.amt;bc[t.cat]=(bc[t.cat]||0)+t.amt;if(t.card)cc[t.card]=(cc[t.card]||0)+t.amt}else i+=t.amt});
   $("exp").textContent=fmt(e);$("inc").textContent=fmt(i);
   var b=S.bud,p=b?Math.min(100,e/b*100):0;
   $("bl").textContent=b?"المتبقي من الميزانية: "+fmt(b-e):"حدد ميزانية شهرية";
@@ -186,6 +201,8 @@ function render(){
   $("list").innerHTML=L.map(function(t){return row(t,true)}).join("")||'<div class="mut">لا توجد معاملات هذا الشهر.</div>';
   var mx=0;for(var c in bc)mx=Math.max(mx,bc[c]);
   $("cats").innerHTML=Object.keys(bc).sort(function(a,c){return bc[c]-bc[a]}).map(function(c){return '<div style="margin-bottom:12px"><div class="row sp"><span>'+c+'</span><b class="amt">'+fmt(bc[c])+'</b></div><div class="bar" style="margin-top:6px"><i style="width:'+bc[c]/mx*100+'%"></i></div></div>'}).join("")||'<div class="mut">لا توجد بيانات.</div>';
+  var ck=Object.keys(cc);$("cardsC").style.display=ck.length?"block":"none";
+  $("cards").innerHTML=ck.map(function(c){return '<div class="row sp" style="margin-bottom:8px"><span>•• '+esc(c)+'</span><b class="amt">'+fmt(cc[c])+'</b></div>'}).join("");
 }
 function exp_(){var a=document.createElement("a");a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(S));a.download="masrofaty-backup.json";a.click()}
 function imp(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{merge(JSON.parse(r.result));save();render()}catch(e){}};r.readAsText(f)}
@@ -196,6 +213,7 @@ function merge(r){
   ["tx","subs"].forEach(function(f){var m={};(S[f]||[]).concat(r[f]||[]).forEach(function(t){if(d[t.id])return;if(!m[t.id]||(t.u||0)>(m[t.id].u||0))m[t.id]=t});S[f]=Object.keys(m).map(function(k){return m[k]})});
   S.del=Object.keys(d).map(Number);
   if((r.bts||0)>(S.bts||0)){S.bud=r.bud;S.bts=r.bts}
+  if((r.cts||0)>(S.cts||0)){S.cats=r.cats;S.al=r.al;S.cts=r.cts}
 }
 function copyLink(){if(!CID){stat("احفظ الـ Client ID أولًا.");return}
   var u=location.origin+location.pathname+"?cid="+encodeURIComponent(CID);
@@ -230,7 +248,7 @@ async function sync(manual){
 }
 
 document.querySelectorAll("[data-i]").forEach(function(e){e.insertAdjacentHTML("afterbegin",'<svg viewBox="0 0 24 24"><path d="'+IC[e.dataset.i]+'"/></svg>')});
-$("c").innerHTML=CATS.map(function(c){return "<option>"+c+"</option>"}).join("");
+fillCats();
 $("cid").value=CID;
 try{if(localStorage.getItem("mhid"))document.body.classList.add("hid")}catch(e){}
 render();
