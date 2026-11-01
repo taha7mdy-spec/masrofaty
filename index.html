@@ -69,6 +69,8 @@ nav button.on svg{background:rgba(18,184,134,.18);width:64px;height:34px;padding
     </div>
   </div>
 
+  <div class="card" id="dueC" style="display:none"><b>مستحقات قريبة</b><div id="due"></div></div>
+
   <div class="card row" onclick="openS('sm')">
     <span class="g" data-i="spark"></span>
     <div class="f1"><b>أتمتة معاملاتك</b><div class="mut">الصق رسالة البنك أو شاركها للتطبيق</div></div>
@@ -116,8 +118,12 @@ nav button.on svg{background:rgba(18,184,134,.18);width:64px;height:34px;padding
   <div class="mut">تقدر كمان تضغط مطولًا على الرسالة ثم Share ثم مصروفاتي.</div></div>
 <div class="sheet" id="bu"><h3>الميزانية الشهرية</h3>
   <input class="in" id="bud" type="number" inputmode="decimal" placeholder="المبلغ"><button class="btn" onclick="setBud()">حفظ</button></div>
-<div class="sheet" id="su"><h3>اشتراك أو فاتورة شهرية</h3>
-  <input class="in" id="sn" placeholder="الاسم (مثلًا Netflix)"><input class="in" id="sa2" type="number" inputmode="decimal" placeholder="المبلغ الشهري">
+<div class="sheet" id="su"><h3>اشتراك أو فاتورة</h3>
+  <input class="in" id="sn" placeholder="الاسم (مثلًا Netflix)">
+  <input class="in" id="sa2" type="number" inputmode="decimal" placeholder="المبلغ">
+  <select class="in" id="sc"><option value="m">شهري</option><option value="q">ربع سنوي</option><option value="y">سنوي</option></select>
+  <div class="mut" style="margin:0 4px 6px">تاريخ الاستحقاق القادم</div>
+  <input class="in" id="sd" type="date">
   <button class="btn" onclick="addSub()">إضافة</button></div>
 <div class="sheet" id="ct"><h3>أسماء التصنيفات</h3><div id="ctl"></div><div class="row"><input class="in" id="nc" placeholder="تصنيف جديد" style="margin:0"><button class="btn" style="width:auto;margin:0;padding:13px 18px" onclick="addCat()">إضافة</button></div></div>
 <div class="sheet" id="sy"><h3>المزامنة والنسخ الاحتياطي</h3>
@@ -163,7 +169,10 @@ function renameCat(i,v){v=v.trim();var L=CL().slice(),o=L[i];if(!v||v===o){fillC
 function addCat(){var v=$("nc").value.trim();if(!v||CL().indexOf(v)>-1)return;S.cats=CL().concat(v);S.cts=Date.now();$("nc").value="";save();fillCats()}
 function add(o){o.u=Date.now();S.tx.unshift(o);save();render()}
 function addManual(){var a=parseFloat($("a").value);if(!a)return;var n=$("n").value.trim();add({id:Date.now(),amt:a,type:$("t").value,note:n||$("c").value,cat:$("c").value,d:Date.now()});$("a").value="";$("n").value="";closeS()}
-function addSub(){var a=parseFloat($("sa2").value),n=$("sn").value.trim();if(!a||!n)return;S.subs.push({id:Date.now(),name:n,amt:a,u:Date.now()});$("sa2").value="";$("sn").value="";save();closeS();render()}
+function addSub(){var a=parseFloat($("sa2").value),n=$("sn").value.trim();if(!a||!n)return;
+  var v=($("sd").value||dstr(new Date())).split("-");
+  S.subs.push({id:Date.now(),name:n,amt:a,cyc:$("sc").value,due:new Date(+v[0],+v[1]-1,+v[2]).getTime(),u:Date.now()});
+  $("sa2").value="";$("sn").value="";$("sd").value=dstr(new Date());save();closeS();render()}
 function parseText(t){
   var t2=t.replace(/(?:الرصيد|الحد\s+المتاح|available\s+(?:balance|limit)|card\s+available|avail\.?\s*bal)[\s\S]*$/i,""),x=t2.match(/(?:EGP|LE|L\.E|جنيه|ج\.?م|مبلغ|بمبلغ)\s*:?\s*([\d,]+(?:\.\d+)?)/i)||t2.match(/([\d,]+(?:\.\d+)?)\s*(?:EGP|LE|جنيه|ج\.?م)/i);
   if(!x)return "ما قدرتش ألاقي مبلغ في الرسالة. جرّب الإضافة اليدوية.";
@@ -187,6 +196,25 @@ function recat(id,c){S.tx.forEach(function(t){if(t.id===id){t.cat=c;t.u=Date.now
 function row(t,full){
   var inc=t.type==="i",o=CL().map(function(c){return '<option'+(c===t.cat?' selected':'')+'>'+c+'</option>'}).join("");
   return '<div class="tx"><div class="row sp"><span>'+esc(t.note)+'</span><b class="amt" style="color:'+(inc?'var(--ac)':'inherit')+'">'+(inc?"+":"−")+fmt(t.amt)+'</b></div><div class="row sp mut" style="margin-top:6px">'+(full?'<select class="chip" onchange="recat('+t.id+',this.value)">'+o+'</select>':'<span>'+esc(t.cat)+(t.card?" · ••"+esc(t.card):"")+'</span>')+'<span>'+new Date(t.d).toLocaleDateString("ar-EG-u-nu-latn")+(full&&t.card?" · ••"+esc(t.card):"")+'</span>'+(full?'<button style="color:var(--red)" onclick="rm('+t.id+')">حذف</button>':'')+'</div></div>'}
+var CY={m:"شهري",q:"ربع سنوي",y:"سنوي"};
+function dstr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function addCy(ts,c){var d=new Date(ts),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+(c==="y"?12:c==="q"?3:1));d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return d.getTime()}
+function dueInfo(s){if(!s.due)return{t:"بدون تاريخ",c:"",n:99};var t0=new Date();t0.setHours(0,0,0,0);var n=Math.round((s.due-t0.getTime())/864e5);
+  var d=new Date(s.due).toLocaleDateString("ar-EG-u-nu-latn",{day:"numeric",month:"long",year:"numeric"});
+  if(n<0)return{t:"متأخر "+(-n)+" يوم",c:"var(--red)",n:n};if(n===0)return{t:"مستحق اليوم",c:"var(--red)",n:n};
+  if(n<=3)return{t:"بعد "+n+" يوم · "+d,c:"#f5a623",n:n};return{t:d,c:"",n:n}}
+function pay(id){var s=S.subs.filter(function(x){return x.id===id})[0];if(!s)return;
+  s.lastPaid=Date.now();s.u=Date.now();if(s.due)s.due=addCy(s.due,s.cyc||"m");
+  cur=new Date();cur.setDate(1);
+  add({id:Date.now(),amt:s.amt,type:"e",note:s.name,cat:(S.al&&S.al["فواتير"])||"فواتير",d:Date.now()});
+  toast("تم تسجيل السداد في المصروفات ✓")}
+function ics(id){var s=S.subs.filter(function(x){return x.id===id})[0];if(!s||!s.due){toast("حدد تاريخ الاستحقاق أولًا");return}
+  var d=new Date(s.due),p=function(n){return String(n).padStart(2,"0")},ds=d.getFullYear()+p(d.getMonth()+1)+p(d.getDate());
+  var rr=s.cyc==="y"?"FREQ=YEARLY":s.cyc==="q"?"FREQ=MONTHLY;INTERVAL=3":"FREQ=MONTHLY",tt="سداد "+s.name+" ("+s.amt+")";
+  var L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//masrofaty//AR","BEGIN:VEVENT","UID:"+s.id+"@masrofaty","DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z","DTSTART;VALUE=DATE:"+ds,"RRULE:"+rr,"SUMMARY:"+tt,
+    "BEGIN:VALARM","TRIGGER:-P1D","ACTION:DISPLAY","DESCRIPTION:"+tt,"END:VALARM","BEGIN:VALARM","TRIGGER:PT9H","ACTION:DISPLAY","DESCRIPTION:"+tt,"END:VALARM","END:VEVENT","END:VCALENDAR"];
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([L.join("\r\n")],{type:"text/calendar;charset=utf-8"}));a.download="masrofaty-reminder.ics";a.click();
+  toast("افتح الملف المحمّل لإضافة التذكير للتقويم")}
 function render(){
   var m=cur.toLocaleDateString("ar-EG-u-nu-latn",{month:"long",year:"numeric"});$("mon").textContent=m;$("mon2").textContent=m;
   var k=key(cur),L=S.tx.filter(function(t){return key(new Date(t.d))===k}).sort(function(a,c){return c.d-a.d}),e=0,i=0,bc={},cc={};
@@ -197,9 +225,12 @@ function render(){
   $("bb").style.width=p+"%";$("bb").className=b&&e>b?"o":"";
   $("bs").textContent=b?"الميزانية "+fmt(b):"حدد ميزانية شهرية";
   $("b2").textContent=b?"المصروف "+fmt(e)+" من "+fmt(b):"لسه ما حددتش ميزانية.";
-  var st=0;S.subs.forEach(function(s){st+=s.amt});
-  $("ss").textContent=S.subs.length?"الإجمالي الشهري "+fmt(st):"أضف فواتيرك واشتراكاتك";
-  $("subs").innerHTML=S.subs.map(function(s){return '<div class="tx row sp"><span>'+esc(s.name)+'</span><span class="amt"><b>'+fmt(s.amt)+'</b> <button style="color:var(--red);margin-inline-start:10px" onclick="rm('+s.id+')">حذف</button></span></div>'}).join("")||'<div class="mut">لا توجد اشتراكات.</div>';
+  var eq=0,dc=0;S.subs.forEach(function(s){eq+=s.amt/(s.cyc==="y"?12:s.cyc==="q"?3:1);if(s.due&&dueInfo(s).n<=3)dc++});
+  $("ss").textContent=S.subs.length?"المعادل الشهري "+fmt(eq)+(dc?" · "+dc+" مستحق":""):"أضف فواتيرك واشتراكاتك";
+  var SL=S.subs.slice().sort(function(a,c){return (a.due||9e15)-(c.due||9e15)});
+  $("subs").innerHTML=SL.map(function(s){var di=dueInfo(s);return '<div class="tx"><div class="row sp"><b>'+esc(s.name)+'</b><b class="amt">'+fmt(s.amt)+'</b></div><div class="mut" style="margin-top:4px">'+CY[s.cyc||"m"]+' · <span style="color:'+di.c+'">'+di.t+'</span>'+(s.lastPaid?' · آخر سداد '+new Date(s.lastPaid).toLocaleDateString("ar-EG-u-nu-latn",{day:"numeric",month:"numeric"}):"")+'</div><div class="row" style="margin-top:10px"><button class="btn" style="margin:0;padding:9px" onclick="pay('+s.id+')">✓ تم السداد</button><button class="btn s" style="margin:0;padding:9px" onclick="ics('+s.id+')">تذكير بالتقويم</button><button style="color:var(--red);padding:0 6px" onclick="rm('+s.id+')">حذف</button></div></div>'}).join("")||'<div class="mut">لا توجد اشتراكات.</div>';
+  var dl=SL.filter(function(s){return s.due&&dueInfo(s).n<=3});$("dueC").style.display=dl.length?"block":"none";
+  $("due").innerHTML=dl.map(function(s){var di=dueInfo(s);return '<div class="row sp" style="margin-top:12px"><div><div>'+esc(s.name)+'</div><div style="color:'+di.c+';font-size:14px">'+di.t+'</div></div><div class="row"><b class="amt">'+fmt(s.amt)+'</b><button class="chip gr" onclick="pay('+s.id+')">✓ تم</button></div></div>'}).join("");
   $("rec").innerHTML=L.length?'<div class="card" style="padding:6px 20px">'+L.slice(0,5).map(function(t){return row(t,false)}).join("")+'</div>':'<div style="text-align:center;padding:26px 0"><b>لا توجد معاملات حديثة</b><div class="mut" style="margin-top:6px">أنشئ معاملتك الأولى.</div></div>';
   $("list").innerHTML=L.map(function(t){return row(t,true)}).join("")||'<div class="mut">لا توجد معاملات هذا الشهر.</div>';
   var mx=0;for(var c in bc)mx=Math.max(mx,bc[c]);
@@ -256,7 +287,7 @@ async function sync(manual){
 }
 
 document.querySelectorAll("[data-i]").forEach(function(e){e.insertAdjacentHTML("afterbegin",'<svg viewBox="0 0 24 24"><path d="'+IC[e.dataset.i]+'"/></svg>')});
-fillCats();
+fillCats();$("sd").value=dstr(new Date());
 $("cid").value=CID;
 try{if(localStorage.getItem("mhid"))document.body.classList.add("hid")}catch(e){}
 render();mark();
