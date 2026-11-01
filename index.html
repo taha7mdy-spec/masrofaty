@@ -69,7 +69,7 @@ nav button.on svg{background:rgba(18,184,134,.18);width:64px;height:34px;padding
     </div>
   </div>
 
-  <div class="card" id="dueC" style="display:none"><b>مستحقات قريبة</b><div id="due"></div></div>
+  <div class="card" id="dueC" style="display:none"><b id="dueT">مستحقات الشهر</b><div id="due"></div></div>
 
   <div class="card row" onclick="openS('sm')">
     <span class="g" data-i="spark"></span>
@@ -112,6 +112,11 @@ nav button.on svg{background:rgba(18,184,134,.18);width:64px;height:34px;padding
   <div class="row"><input class="in" id="a" type="number" inputmode="decimal" placeholder="المبلغ"><select class="in" id="t" style="width:120px"><option value="e">مصروف</option><option value="i">دخل</option></select></div>
   <input class="in" id="n" placeholder="الوصف"><select class="in" id="c"></select>
   <button class="btn" onclick="addManual()">إضافة</button></div>
+<div class="sheet" id="ed"><h3>تعديل المعاملة</h3>
+  <div class="row"><input class="in" id="ea" type="number" inputmode="decimal" placeholder="المبلغ"><select class="in" id="et" style="width:120px"><option value="e">مصروف</option><option value="i">دخل</option></select></div>
+  <input class="in" id="en" placeholder="الوصف"><select class="in" id="ec"></select>
+  <div class="mut" style="margin:0 4px 6px">التاريخ</div><input class="in" id="edd" type="date">
+  <button class="btn" onclick="saveEdit()">حفظ</button></div>
 <div class="sheet" id="sm"><h3>الصق رسالة البنك</h3>
   <textarea class="in" id="sms" placeholder="الصق رسالة الـ SMS هنا…"></textarea>
   <button class="btn" onclick="doSms()">تحليل وإضافة</button>
@@ -208,9 +213,19 @@ function parseText(t){
 function doSms(){var m=parseText($("sms").value);$("sms").value="";closeS();toast(m,m.indexOf("تمت")===0)}
 function rm(id){S.tx=S.tx.filter(function(t){return t.id!==id});S.subs=S.subs.filter(function(t){return t.id!==id});S.del.push(id);save();render();toast("تم الحذف",1)}
 function recat(id,c){S.tx.forEach(function(t){if(t.id===id){t.cat=c;t.u=Date.now()}});save();render();toast("تم تغيير التصنيف",1)}
+var EID=0;
+function edit(id){var t=S.tx.filter(function(x){return x.id===id})[0];if(!t)return;EID=id;
+  $("ea").value=t.amt;$("et").value=t.type;$("en").value=t.note;
+  $("ec").innerHTML=(CL().indexOf(t.cat)<0?[t.cat].concat(CL()):CL()).map(function(c){return '<option'+(c===t.cat?' selected':'')+'>'+esc(c)+'</option>'}).join("");
+  $("edd").value=dstr(new Date(t.d));openS("ed")}
+function saveEdit(){var t=S.tx.filter(function(x){return x.id===EID})[0];if(!t)return;var a=parseFloat($("ea").value);if(!a)return;
+  var o=new Date(t.d),v=($("edd").value||dstr(o)).split("-"),nd=new Date(+v[0],+v[1]-1,+v[2],o.getHours(),o.getMinutes());
+  t.amt=a;t.type=$("et").value;t.cat=$("ec").value;t.note=$("en").value.trim()||t.cat;t.d=nd.getTime();t.u=Date.now();
+  cur=new Date(nd.getFullYear(),nd.getMonth(),1);save();closeS();render();toast("تم التعديل",1)}
+function gotoM(ts){var d=new Date(ts);cur=new Date(d.getFullYear(),d.getMonth(),1);render()}
 function row(t,full){
   var inc=t.type==="i",o=CL().map(function(c){return '<option'+(c===t.cat?' selected':'')+'>'+c+'</option>'}).join("");
-  return '<div class="tx"><div class="row sp"><span>'+esc(t.note)+'</span><b class="amt" style="color:'+(inc?'var(--ac)':'inherit')+'">'+(inc?"+":"−")+fmt(t.amt)+'</b></div><div class="row sp mut" style="margin-top:6px">'+(full?'<select class="chip" onchange="recat('+t.id+',this.value)">'+o+'</select>':'<span>'+esc(t.cat)+(t.card?" · ••"+esc(t.card):"")+'</span>')+'<span>'+new Date(t.d).toLocaleDateString("ar-EG-u-nu-latn")+(full&&t.card?" · ••"+esc(t.card):"")+'</span>'+(full?'<button style="color:var(--red)" onclick="rm('+t.id+')">حذف</button>':'')+'</div></div>'}
+  return '<div class="tx"><div class="row sp"'+(full?' onclick="edit('+t.id+')"':'')+'><span>'+esc(t.note)+'</span><b class="amt" style="color:'+(inc?'var(--ac)':'inherit')+'">'+(inc?"+":"−")+fmt(t.amt)+'</b></div><div class="row sp mut" style="margin-top:6px">'+(full?'<select class="chip" onchange="recat('+t.id+',this.value)">'+o+'</select>':'<span>'+esc(t.cat)+(t.card?" · ••"+esc(t.card):"")+'</span>')+'<span>'+new Date(t.d).toLocaleDateString("ar-EG-u-nu-latn")+(full&&t.card?" · ••"+esc(t.card):"")+'</span>'+(full?'<span><button style="color:var(--ac)" onclick="edit('+t.id+')">تعديل</button><button style="color:var(--red);margin-inline-start:10px" onclick="rm('+t.id+')">حذف</button></span>':'')+'</div></div>'}
 var CY={m:"شهري",q:"ربع سنوي",y:"سنوي"};
 function dstr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function addCy(ts,c){var d=new Date(ts),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+(c==="y"?12:c==="q"?3:1));d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return d.getTime()}
@@ -244,8 +259,13 @@ function render(){
   $("ss").textContent=S.subs.length?"المعادل الشهري "+fmt(eq)+(dc?" · "+dc+" مستحق":""):"أضف فواتيرك واشتراكاتك";
   var SL=S.subs.slice().sort(function(a,c){return (a.due||9e15)-(c.due||9e15)});
   $("subs").innerHTML=SL.map(function(s){var di=dueInfo(s);return '<div class="tx"><div class="row sp"><b>'+esc(s.name)+'</b><b class="amt">'+fmt(s.amt)+'</b></div><div class="mut" style="margin-top:4px">'+CY[s.cyc||"m"]+' · <span style="color:'+di.c+'">'+di.t+'</span>'+(s.lastPaid?' · آخر سداد '+new Date(s.lastPaid).toLocaleDateString("ar-EG-u-nu-latn",{day:"numeric",month:"numeric"}):"")+'</div><div class="row" style="margin-top:10px"><button class="btn" style="margin:0;padding:9px" onclick="pay('+s.id+')">✓ تم السداد</button><button class="btn s" style="margin:0;padding:9px" onclick="ics('+s.id+')">تذكير بالتقويم</button><button style="color:var(--red);padding:0 6px" onclick="rm('+s.id+')">حذف</button></div></div>'}).join("")||'<div class="mut">لا توجد اشتراكات.</div>';
-  var dl=SL.filter(function(s){return s.due&&dueInfo(s).n<=3});$("dueC").style.display=dl.length?"block":"none";
-  $("due").innerHTML=dl.map(function(s){var di=dueInfo(s);return '<div class="row sp" style="margin-top:12px"><div><div>'+esc(s.name)+'</div><div style="color:'+di.c+';font-size:14px">'+di.t+'</div></div><div class="row"><b class="amt">'+fmt(s.amt)+'</b><button class="chip gr" onclick="pay('+s.id+')">✓ تم</button></div></div>'}).join("");
+  var ms=new Date(cur.getFullYear(),cur.getMonth(),1).getTime(),me=new Date(cur.getFullYear(),cur.getMonth()+1,1).getTime(),t0=new Date();t0.setHours(0,0,0,0);
+  var isNow=key(cur)===key(new Date()),dl=SL.filter(function(s){return s.due&&s.due>=ms&&s.due<me});
+  var od=isNow?SL.filter(function(s){return s.due&&s.due<ms}):[],nx=isNow?SL.filter(function(s){return s.due&&s.due>=me&&dueInfo(s).n<=3}):[];
+  $("dueC").style.display=dl.length||od.length||nx.length?"block":"none";$("dueT").textContent="مستحقات "+m;
+  $("due").innerHTML=(od.length?'<div style="color:var(--red);margin-top:10px" onclick="gotoM('+od[0].due+')">⚠ '+od.length+' اشتراك متأخر من شهور سابقة ‹</div>':"")
+    +(nx.length?'<div style="color:#f5a623;margin-top:10px" onclick="gotoM('+nx[0].due+')">🔔 '+nx.length+' مستحق خلال أيام في الشهر القادم ‹</div>':"")
+    +dl.map(function(s){var di=dueInfo(s);return '<div class="row sp" style="margin-top:12px"><div><div>'+esc(s.name)+'</div><div style="color:'+di.c+';font-size:14px">'+di.t+'</div></div><div class="row"><b class="amt">'+fmt(s.amt)+'</b><button class="chip gr" onclick="pay('+s.id+')">✓ تم</button></div></div>'}).join("");
   $("rec").innerHTML=L.length?'<div class="card" style="padding:6px 20px">'+L.slice(0,5).map(function(t){return row(t,false)}).join("")+'</div>':'<div style="text-align:center;padding:26px 0"><b>لا توجد معاملات حديثة</b><div class="mut" style="margin-top:6px">أنشئ معاملتك الأولى.</div></div>';
   $("list").innerHTML=L.map(function(t){return row(t,true)}).join("")||'<div class="mut">لا توجد معاملات هذا الشهر.</div>';
   var mx=0;for(var c in bc)mx=Math.max(mx,bc[c]);
