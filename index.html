@@ -45,13 +45,15 @@ nav button.on svg{background:rgba(18,184,134,.18);width:64px;height:34px;padding
 .sheet h3{margin:0 0 14px}
 .toast{position:fixed;inset-inline:16px;bottom:calc(180px + env(safe-area-inset-bottom,0px));background:var(--ac);color:#fff;padding:12px 16px;border-radius:16px;display:none;z-index:30;text-align:center}
 .hid .amt{filter:blur(9px)}
+.ib{position:relative}.dot::after{content:"";position:absolute;top:7px;inset-inline-end:7px;width:11px;height:11px;border-radius:50%;background:#f5a623;border:2px solid var(--c1)}
+.spin svg{animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
 .pg{display:none}.pg.on{display:block}
 </style>
 </head>
 <body>
 <div class="row sp" style="margin-bottom:14px">
   <div class="pill"><button onclick="mv(-1)">›</button><span id="mon"></span><button onclick="mv(1)">‹</button></div>
-  <button class="ib" data-i="cloud" onclick="openS('sy')"></button>
+  <div class="row"><button class="ib" id="sb" data-i="sync" onclick="syncBtn()"></button><button class="ib" data-i="cloud" onclick="openS('sy')"></button></div>
 </div>
 
 <div id="p0" class="pg on">
@@ -129,12 +131,13 @@ nav button.on svg{background:rgba(18,184,134,.18);width:64px;height:34px;padding
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-var IC={plus:"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z",grid:"M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z",pie:"M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z",cal:"M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z",eye:"M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z",spark:"M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z",cloud:"M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"};
+var IC={sync:"M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z",plus:"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z",grid:"M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z",pie:"M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z",cal:"M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z",eye:"M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z",spark:"M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z",cloud:"M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"};
 var CATS=["أكل","مواصلات","فواتير","تسوق","صحة","ترفيه","تحويلات","أخرى"];
 var KW={"أكل":/مطعم|كافيه|cafe|coffee|food|talabat|طلبات|elmenus|carrefour|كارفور|سوبر|market|بقالة|mcdonald|kfc/i,"مواصلات":/uber|careem|كريم|اوبر|بنزين|petrol|وقود|مترو|indrive/i,"فواتير":/فاتورة|bill|fawry|فوري|vodafone|orange|etisalat|فودافون|اتصالات|كهرباء|غاز|مياه|انترنت/i,"تسوق":/amazon|noon|jumia|mall|مول|متجر|store|shop|souq|gomla|سوق|جملة/i,"صحة":/صيدلية|pharmacy|مستشفى|clinic|عيادة|دكتور|وصفة/i,"ترفيه":/netflix|spotify|cinema|سينما|youtube|shahid|game/i,"تحويلات":/تحويل|transfer|instapay|انستاباي/i};
 var S={tx:[],subs:[],del:[],bud:0,bts:0},cur=new Date();cur.setDate(1);
 var CID="",tok=null,tokExp=0,tc=null,timer=null;
 try{var r=localStorage.getItem("masrofaty");if(r)S=Object.assign(S,JSON.parse(r));CID=localStorage.getItem("mcid")||""}catch(e){}
+var DIRTY=0;try{DIRTY=localStorage.getItem("mdirty")?1:0}catch(e){}
 function $(i){return document.getElementById(i)}
 function fmt(n){return "£"+Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})}
 function key(d){return d.getFullYear()+"-"+d.getMonth()}
@@ -145,7 +148,7 @@ function openS(id){$("bk").style.display="block";$(id).classList.add("show")}
 function closeS(){$("bk").style.display="none";document.querySelectorAll(".sheet").forEach(function(s){s.classList.remove("show")})}
 function go(n){for(var i=0;i<3;i++){$("p"+i).classList.toggle("on",i===n);document.querySelectorAll("nav button")[i].classList.toggle("on",i===n)}window.scrollTo(0,0)}
 function toggleEye(){var h=document.body.classList.toggle("hid");try{localStorage.setItem("mhid",h?"1":"")}catch(e){}}
-function save(){try{localStorage.setItem("masrofaty",JSON.stringify(S))}catch(e){}
+function save(){DIRTY=1;try{localStorage.setItem("masrofaty",JSON.stringify(S));localStorage.setItem("mdirty","1")}catch(e){}mark();
   if(tok&&Date.now()<tokExp){clearTimeout(timer);timer=setTimeout(function(){sync(false)},1500)}}
 function mv(k){cur.setMonth(cur.getMonth()+k);render()}
 function setBud(){S.bud=parseFloat($("bud").value)||0;S.bts=Date.now();save();closeS();render()}
@@ -215,6 +218,8 @@ function merge(r){
   if((r.bts||0)>(S.bts||0)){S.bud=r.bud;S.bts=r.bts}
   if((r.cts||0)>(S.cts||0)){S.cats=r.cats;S.al=r.al;S.cts=r.cts}
 }
+function mark(){$("sb").classList.toggle("dot",!!(DIRTY&&CID))}
+function syncBtn(){if(!CID){openS("sy");toast("حط الـ Client ID الأول");return}sync(true)}
 function copyLink(){if(!CID){stat("احفظ الـ Client ID أولًا.");return}
   var u=location.origin+location.pathname+"?cid="+encodeURIComponent(CID);
   if(navigator.clipboard)navigator.clipboard.writeText(u).then(function(){stat("تم نسخ اللينك. ابعته لنفسك وافتحه على الموبايل.")},function(){prompt("انسخ اللينك:",u)});else prompt("انسخ اللينك:",u)}
@@ -232,7 +237,7 @@ async function api(url,opt){
   var r=await fetch(url,opt);if(!r.ok)throw new Error("خطأ من Drive ("+r.status+")");return r}
 async function sync(manual){
   try{
-    stat("جارٍ المزامنة…");await getToken();
+    $("sb").classList.add("spin");stat("جارٍ المزامنة…");await getToken();
     var q=encodeURIComponent("name='masrofaty.json' and 'appDataFolder' in parents");
     var l=await(await api("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id)&q="+q)).json();
     var id=l.files&&l.files[0]&&l.files[0].id;
@@ -244,14 +249,17 @@ async function sync(manual){
       await api("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+b},body:"--"+b+"\r\nContent-Type: application/json\r\n\r\n"+meta+"\r\n--"+b+"\r\nContent-Type: application/json\r\n\r\n"+body+"\r\n--"+b+"--"});
     }
     stat("تمت المزامنة "+new Date().toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}));
-  }catch(e){stat(e.message||"فشلت المزامنة.")}
+    DIRTY=0;try{localStorage.removeItem("mdirty")}catch(x){}
+    if(manual)toast("تمت المزامنة ✓");
+  }catch(e){stat(e.message||"فشلت المزامنة.");if(manual)toast(e.message||"فشلت المزامنة.")}
+  finally{$("sb").classList.remove("spin");mark()}
 }
 
 document.querySelectorAll("[data-i]").forEach(function(e){e.insertAdjacentHTML("afterbegin",'<svg viewBox="0 0 24 24"><path d="'+IC[e.dataset.i]+'"/></svg>')});
 fillCats();
 $("cid").value=CID;
 try{if(localStorage.getItem("mhid"))document.body.classList.add("hid")}catch(e){}
-render();
+render();mark();
 var q=new URLSearchParams(location.search),sh=q.get("text")||q.get("title"),pc=q.get("cid");
 if(pc){CID=pc.trim();try{localStorage.setItem("mcid",CID)}catch(e){}$("cid").value=CID;openS("sy");stat("تم ضبط الـ Client ID تلقائيًا. اضغط مزامنة.");history.replaceState(null,"",location.pathname)}
 if(sh){toast(parseText(sh));history.replaceState(null,"",location.pathname)}
